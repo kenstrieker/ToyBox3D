@@ -21,23 +21,24 @@ namespace engine {
 
 	class pipeline {
 	public:
-		pipeline(device& deviceInstance, const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo);
-		~pipeline();
+		pipeline(device& deviceInstance, const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo); // constructor
+		~pipeline(); // destructor
 
+		// not copyable or movable
 		pipeline(const pipeline&) = delete;
 		void operator = (const pipeline&) = delete;
 
-		void bind(VkCommandBuffer commandBuffer);
-		static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
+		void bind(VkCommandBuffer commandBuffer); // bind a pipeline
+		static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height); // to set up the pipeline's fixed functions
 
 	private:
-		static std::vector<char> readFile(const std::string& filepath);
-		void createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo);
-		void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
+		static std::vector<char> readFile(const std::string& filepath); // to read a file
+		void createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo); // to set up the graphics pipeline
+		void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule); // for loading vertex buffer data
 
-		device& deviceInstance;
-		VkPipeline graphicsPipeline;
-		VkShaderModule vertShaderModule;
-		VkShaderModule fragShaderModule;
+		device& deviceInstance; // reference to device; this will outlive any instances of this class as a pipeline depends on a device to exist
+		VkPipeline graphicsPipeline; // a handle to the graphics pipeline
+		VkShaderModule vertShaderModule; // a handle to the vertex shader
+		VkShaderModule fragShaderModule; // a handle to the fragment shader
 	};
 }

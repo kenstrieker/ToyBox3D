@@ -37,7 +37,7 @@ namespace engine {
 		}
 	}
 
-	device::device(window& windowInstance) : windowInstance{ windowInstance } { // using a constructor member initializer list
+	device::device(window& windowInstance) : windowInstance{ windowInstance } {
 		createInstance();
 		setupDebugMessenger();
 		createSurface();
@@ -161,6 +161,8 @@ namespace engine {
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 		
+		// enabledLayerCount and ppEnabledLayerNames fields of VkDeviceCreateInfo are ignored by up-to-date implementations
+		// but it's a good idea to set them up anyway to be compatible with older implementations
 		if (enableValidationLayers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
@@ -187,6 +189,7 @@ namespace engine {
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
 		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
+		// create the command pool
 		if (vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create command pool!");
 		}
