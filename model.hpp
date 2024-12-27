@@ -8,15 +8,18 @@
 namespace engine {
 	class model {
 	public:
+		// struct for vertex attributes to make them easier to work with
 		struct Vertex {
 			glm::vec2 position;
+			glm::vec3 color;
 			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 		};
 
-		model(device& deviceInstance, const std::vector<Vertex>& vertices);
-		~model();
+		model(device& deviceInstance, const std::vector<Vertex>& vertices); // constructor
+		~model(); // destructor
 
+		// not copyable or movable
 		model(const model&) = delete;
 		model& operator = (const model&) = delete;
 
@@ -24,10 +27,10 @@ namespace engine {
 		void draw(VkCommandBuffer commandBuffer);
 
 	private:
-		void createVertexBuffers(const std::vector<Vertex>& vertices);
-		device& deviceInstance;
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
-		uint32_t vertexCount;
+		void createVertexBuffers(const std::vector<Vertex>& vertices); // to create the vertex buffers
+		device& deviceInstance; // reference to the device
+		VkBuffer vertexBuffer; // a handle for the vertex buffer
+		VkDeviceMemory vertexBufferMemory; // a handle for the memory containing the vertex buffer
+		uint32_t vertexCount; // a handle for the count of vertices
 	};
 }

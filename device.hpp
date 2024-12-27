@@ -34,7 +34,7 @@ namespace engine {
 
 		// not copyable or movable
 		device(const device&) = delete;
-		void operator = (const device&) = delete;
+		device& operator = (const device&) = delete;
 		device(device&&) = delete;
 		device& operator = (device&&) = delete;
 
@@ -50,7 +50,7 @@ namespace engine {
 		QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); } // look for all the queue families we need
 		VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
-		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory); // initialize and return a buffer
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 		void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);

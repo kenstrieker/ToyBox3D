@@ -9,6 +9,17 @@
 
 namespace engine {
 	swapchain::swapchain(device& deviceRef, VkExtent2D extent) : deviceInstance{ deviceRef }, windowExtent{ extent } {
+		init();
+	}
+
+	swapchain::swapchain(device& deviceRef, VkExtent2D extent, std::shared_ptr<swapchain> previous) : deviceInstance{ deviceRef }, windowExtent{ extent }, oldSwapchainInstance{ previous } {
+		init();
+
+		// clean up old swap chain since it's no longer needed
+		oldSwapchainInstance = nullptr;
+	}
+
+	void swapchain::init() {
 		createSwapchain();
 		createImageViews();
 		createRenderPass();
@@ -146,7 +157,7 @@ namespace engine {
 		createInfo.presentMode = presentMode;
 		createInfo.clipped = VK_TRUE;
 
-		createInfo.oldSwapchain = VK_NULL_HANDLE;
+		createInfo.oldSwapchain = oldSwapchainInstance == nullptr ? VK_NULL_HANDLE : oldSwapchainInstance->swapchainInstance;
 
 		// create the swap chain
 		if (vkCreateSwapchainKHR(deviceInstance.getDevice(), &createInfo, nullptr, &swapchainInstance) != VK_SUCCESS) {
@@ -344,8 +355,8 @@ namespace engine {
 	VkSurfaceFormatKHR swapchain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 		// loop through the list and see if the preferred combination of format and colorSpace is available
 		for (const auto& availableFormat : availableFormats) {
-			// note: load LINEAR images w/ VK_FORMAT_R8G8B8A8_UNORM, load SRGB images w/ VK_FORMAT_R8G8B8A8_SRGB
-			if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+			// note: load LINEAR images w/ VK_FORMAT_R8G8B8A8_UNORM, load SRGB images w/ VK_FORMAT_R8G8B8A8_SRGB for gamma correction
+			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				return availableFormat;
 			}
 		}

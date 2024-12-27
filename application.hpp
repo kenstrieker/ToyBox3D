@@ -27,11 +27,14 @@ namespace engine {
 		void createPipelineLayout(); // create a pipeline layout
 		void createPipeline(); // create a pipeline
 		void createCommandBuffers(); // allocate command buffers from the command pool
+		void freeCommandBuffers(); // deallocate command buffers
 		void drawFrame(); // draw a frame
+		void recreateSwapchain(); // recreate the swap chain (for example, when resizing the window)
+		void recordCommandBuffer(int imageIndex); // record a command buffer
 
 		window windowInstance{ WIDTH, HEIGHT, "VulkanGame" }; // a handle for the window instance
 		device deviceInstance{ windowInstance }; // a handle for the device instance
-		swapchain swapchainInstance{ deviceInstance, windowInstance.getExtent() }; // a handle for the swap chain instance
+		std::unique_ptr<swapchain> swapchainInstance; // a handle for the swap chain instance
 		std::unique_ptr<pipeline> pipelineInstance; // a handle for the pipeline instance
 		VkPipelineLayout pipelineLayout; // a handle for the pipeline layout
 		std::vector<VkCommandBuffer> commandBuffers; // a handle for the command buffers

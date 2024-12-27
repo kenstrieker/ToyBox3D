@@ -1,6 +1,7 @@
 #pragma once
 #include "device.hpp"
 #include <vulkan/vulkan.h>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -9,11 +10,12 @@ namespace engine {
 	public:
 		static constexpr int MAX_FRAMES_IN_FLIGHT = 2; // avoids the CPU getting too far ahead of the GPU
 		swapchain(device& deviceRef, VkExtent2D windowExtent); // constructor
+		swapchain(device& deviceRef, VkExtent2D windowExtent, std::shared_ptr<swapchain> previous); // constructor with pointer to previous swap chain
 		~swapchain(); // destructor
 		
 		// not copyable or movable
 		swapchain(const swapchain&) = delete;
-		void operator = (const swapchain&) = delete;
+		swapchain& operator = (const swapchain&) = delete;
 
 		// getters for class members
 		VkFramebuffer getFrameBuffer(int index) { return swapchainFramebuffers[index]; }
@@ -32,6 +34,7 @@ namespace engine {
 		VkResult submitCommandBuffers(const VkCommandBuffer* buffers, uint32_t* imageIndex); // submit the command buffers and synchronize
 
 	private:
+		void init();
 		void createSwapchain(); // create the swap chain
 		void createImageViews(); // create the image views
 		void createDepthResources();
@@ -59,6 +62,7 @@ namespace engine {
 		VkExtent2D windowExtent;
 
 		VkSwapchainKHR swapchainInstance;
+		std::shared_ptr<swapchain> oldSwapchainInstance;
 
 		std::vector<VkSemaphore> imageAvailableSemaphores; // signals that an image has been acquired from the swapchain and is ready for rendering
 		std::vector<VkSemaphore> renderFinishedSemaphores; // signals that rendering has finished and presentation can happen
