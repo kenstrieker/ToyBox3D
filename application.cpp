@@ -1,10 +1,20 @@
 #include "application.hpp"
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 #include <stdexcept>
 #include <array>
 
 namespace engine {
+	struct SimplePushConstantData {
+		glm::mat2 transform{ 1.f };
+		glm::vec2 offset;
+		alignas(16) glm::vec3 color;
+	};
+
 	application::application() {
-		loadModels();
+		loadEntities();
 		createPipelineLayout();
 		recreateSwapchain();
 		createCommandBuffers();
@@ -23,24 +33,37 @@ namespace engine {
 		vkDeviceWaitIdle(deviceInstance.getDevice());
 	}
 
-	void application::loadModels() {
-		std::vector<model::Vertex> vertices{
+	void application::loadEntities() {
+		std::vector<model::Vertex> vertices {
 			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 		};
 
-		modelInstance = std::make_unique<model>(deviceInstance, vertices);
+		auto modelInstance = std::make_shared<model>(deviceInstance, vertices);
+		auto triangle = entity::createEntity();
+		triangle.modelInstance = modelInstance;
+		triangle.color = { .1f, .8f, .1f };
+		triangle.transform2d.translation.x = .2f;
+		triangle.transform2d.scale = { 2.f, .5f };
+		triangle.transform2d.rotation = .25f * glm::two_pi<float>(); // in radians
+		entities.push_back(std::move(triangle));
 	}
 
 	void application::createPipelineLayout() {
+		// create a push constant range
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(SimplePushConstantData);
+
 		// fill out the VkPipelineLayoutCreateInfo struct
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = 0;
 		pipelineLayoutInfo.pSetLayouts = nullptr;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		// create the pipeline layout
 		if (vkCreatePipelineLayout(deviceInstance.getDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
@@ -127,7 +150,7 @@ namespace engine {
 
 		// define clear values to use for the color attachment
 		std::array<VkClearValue, 2> clearValues = {};
-		clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
+		clearValues[0].color = { 0.01f, 0.1f, 0.1f, 1.0f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderPassInfo.pClearValues = clearValues.data();
@@ -147,15 +170,32 @@ namespace engine {
 		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-		// bind the graphics pipeline and model, and issue the draw command
-		pipelineInstance->bind(commandBuffers[imageIndex]);
-		modelInstance->bind(commandBuffers[imageIndex]);
-		modelInstance->draw(commandBuffers[imageIndex]);
+		// render the entities
+		renderEntities(commandBuffers[imageIndex]);
 
 		// end the render pass and finish recording the command buffer
 		vkCmdEndRenderPass(commandBuffers[imageIndex]);
 		if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
 			throw std::runtime_error("failed to record command buffer!");
+		}
+	}
+
+	void application::renderEntities(VkCommandBuffer commandBuffer) {
+		pipelineInstance->bind(commandBuffer);
+
+		// loop through all entities and record their binds and draws to the command buffer
+		for (auto& entityInstance : entities) {
+			entityInstance.transform2d.rotation = glm::mod(entityInstance.transform2d.rotation + 0.01f, glm::two_pi<float>());
+
+			SimplePushConstantData push = {};
+			push.offset = entityInstance.transform2d.translation;
+			push.color = entityInstance.color;
+			push.transform = entityInstance.transform2d.mat2();
+
+			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+
+			entityInstance.modelInstance->bind(commandBuffer);
+			entityInstance.modelInstance->draw(commandBuffer);
 		}
 	}
 

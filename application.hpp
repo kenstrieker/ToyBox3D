@@ -3,7 +3,7 @@
 #include "pipeline.hpp"
 #include "device.hpp"
 #include "swapchain.hpp"
-#include "model.hpp"
+#include "entity.hpp"
 #include <memory>
 #include <vector>
 
@@ -23,7 +23,7 @@ namespace engine {
 		void run(); // main event loop function
 
 	private:
-		void loadModels();
+		void loadEntities(); // load the entities
 		void createPipelineLayout(); // create a pipeline layout
 		void createPipeline(); // create a pipeline
 		void createCommandBuffers(); // allocate command buffers from the command pool
@@ -31,6 +31,7 @@ namespace engine {
 		void drawFrame(); // draw a frame
 		void recreateSwapchain(); // recreate the swap chain (for example, when resizing the window)
 		void recordCommandBuffer(int imageIndex); // record a command buffer
+		void renderEntities(VkCommandBuffer commandBuffer); // render the entities
 
 		window windowInstance{ WIDTH, HEIGHT, "VulkanGame" }; // a handle for the window instance
 		device deviceInstance{ windowInstance }; // a handle for the device instance
@@ -38,6 +39,6 @@ namespace engine {
 		std::unique_ptr<pipeline> pipelineInstance; // a handle for the pipeline instance
 		VkPipelineLayout pipelineLayout; // a handle for the pipeline layout
 		std::vector<VkCommandBuffer> commandBuffers; // a handle for the command buffers
-		std::unique_ptr<model> modelInstance;
+		std::vector<entity> entities; // a handle for the entity objects
 	};
 }
