@@ -33,6 +33,10 @@ namespace engine {
 		VkResult acquireNextImage(uint32_t* imageIndex);
 		VkResult submitCommandBuffers(const VkCommandBuffer* buffers, uint32_t* imageIndex); // submit the command buffers and synchronize
 
+		bool compareSwapFormats(const swapchain& swapchainInstance) const {
+			return swapchainInstance.swapchainDepthFormat == swapchainDepthFormat && swapchainInstance.swapchainImageFormat == swapchainImageFormat;
+		}
+
 	private:
 		void init();
 		void createSwapchain(); // create the swap chain
@@ -47,6 +51,7 @@ namespace engine {
 		VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities); // find the extent (~resolution) settings for the swap chain
 
 		VkFormat swapchainImageFormat;
+		VkFormat swapchainDepthFormat;
 		VkExtent2D swapchainExtent;
 
 		std::vector<VkFramebuffer> swapchainFramebuffers; // a handle to hold the framebuffers

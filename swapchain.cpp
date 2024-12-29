@@ -285,6 +285,7 @@ namespace engine {
 
 	void swapchain::createDepthResources() {
 		VkFormat depthFormat = findDepthFormat();
+		swapchainDepthFormat = depthFormat;
 		VkExtent2D swapchainExtent = getSwapchainExtent();
 
 		depthImages.resize(getImageCount());
