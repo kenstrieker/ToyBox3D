@@ -8,8 +8,7 @@
 
 namespace engine {
 	struct SimplePushConstantData {
-		glm::mat2 transform{ 1.f };
-		glm::vec2 offset;
+		glm::mat4 transform{ 1.f };
 		alignas(16) glm::vec3 color;
 	};
 
@@ -59,12 +58,12 @@ namespace engine {
 
 		// loop through all entities and record their binds and draws to the command buffer
 		for (auto& entityInstance : entities) {
-			entityInstance.transform2d.rotation = glm::mod(entityInstance.transform2d.rotation + 0.01f, glm::two_pi<float>());
+			entityInstance.transform.rotation.y = glm::mod(entityInstance.transform.rotation.y + 0.01f, glm::two_pi<float>());
+			entityInstance.transform.rotation.x = glm::mod(entityInstance.transform.rotation.x + 0.005f, glm::two_pi<float>());
 
 			SimplePushConstantData push = {};
-			push.offset = entityInstance.transform2d.translation;
 			push.color = entityInstance.color;
-			push.transform = entityInstance.transform2d.mat2();
+			push.transform = entityInstance.transform.mat4();
 
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 
