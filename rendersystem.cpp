@@ -53,7 +53,7 @@ namespace engine {
 		pipelineInstance = std::make_unique<pipeline>(deviceInstance, "simple_shader.vert.spv", "simple_shader.frag.spv", pipelineConfig);
 	}
 
-	void rendersystem::renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities) {
+	void rendersystem::renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities, const camera& cameraInstance) {
 		pipelineInstance->bind(commandBuffer);
 
 		// loop through all entities and record their binds and draws to the command buffer
@@ -63,7 +63,7 @@ namespace engine {
 
 			SimplePushConstantData push = {};
 			push.color = entityInstance.color;
-			push.transform = entityInstance.transform.mat4();
+			push.transform = cameraInstance.getProjection() * entityInstance.transform.mat4();
 
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 

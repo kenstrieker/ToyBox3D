@@ -1,4 +1,5 @@
 #pragma once
+#include "camera.hpp"
 #include "pipeline.hpp"
 #include "device.hpp"
 #include "entity.hpp"
@@ -15,7 +16,7 @@ namespace engine {
 		rendersystem(const rendersystem&) = delete;
 		rendersystem& operator = (const rendersystem&) = delete;
 
-		void renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities); // render the entities
+		void renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities, const camera& cameraInstance); // render the entities
 
 	private:
 		void createPipelineLayout(); // create a pipeline layout

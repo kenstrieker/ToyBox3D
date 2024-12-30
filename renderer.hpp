@@ -17,6 +17,7 @@ namespace engine {
 		renderer& operator = (const renderer&) = delete;
 
 		VkRenderPass getSwapchainRenderPass() const { return swapchainInstance->getRenderPass(); }
+		float getAspectRatio() const { return swapchainInstance->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; }
 
 		VkCommandBuffer getCurrentCommandBuffer() const {
