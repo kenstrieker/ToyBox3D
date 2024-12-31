@@ -18,6 +18,9 @@ namespace engine {
 	void application::run() {
 		rendersystem rendersys{ deviceInstance, rendererInstance.getSwapchainRenderPass() };
         camera cameraInstance = {};
+        
+        // cameraInstance.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
+        cameraInstance.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
 
 		while (!windowInstance.shouldClose()) {
 			glfwPollEvents();

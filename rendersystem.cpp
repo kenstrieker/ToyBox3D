@@ -56,14 +56,17 @@ namespace engine {
 	void rendersystem::renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities, const camera& cameraInstance) {
 		pipelineInstance->bind(commandBuffer);
 
+		auto projectionView = cameraInstance.getProjection() * cameraInstance.getView();
+
 		// loop through all entities and record their binds and draws to the command buffer
 		for (auto& entityInstance : entities) {
 			entityInstance.transform.rotation.y = glm::mod(entityInstance.transform.rotation.y + 0.01f, glm::two_pi<float>());
 			entityInstance.transform.rotation.x = glm::mod(entityInstance.transform.rotation.x + 0.005f, glm::two_pi<float>());
+			entityInstance.transform.rotation.z = glm::mod(entityInstance.transform.rotation.z + 0.007f, glm::two_pi<float>());
 
 			SimplePushConstantData push = {};
 			push.color = entityInstance.color;
-			push.transform = cameraInstance.getProjection() * entityInstance.transform.mat4();
+			push.transform = projectionView * entityInstance.transform.mat4();
 
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 
