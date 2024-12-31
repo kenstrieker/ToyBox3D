@@ -14,6 +14,7 @@ namespace engine {
 		VkExtent2D getExtent() { return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) }; } // returns the width and height
 		bool wasWindowResized() { return framebufferResized; } // check if the window was resized
 		void resetWindowResizedFlag() { framebufferResized = false; } // reset the window resized flag
+		GLFWwindow* getGLFWwindow() const { return windowInstance; } // return the handle to the window instance
 		void createWindowSurface(VkInstance vulkanInstance, VkSurfaceKHR* surface); // lets GLFW handle creating the surface to present rendered images to
 
 	private:

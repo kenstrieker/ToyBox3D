@@ -1,12 +1,15 @@
 #include "application.hpp"
 #include "camera.hpp"
 #include "rendersystem.hpp"
+#include "input.hpp"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <stdexcept>
 #include <array>
+#include <chrono>
+#include <cassert>
 
 namespace engine {
 	application::application() {
@@ -19,13 +22,24 @@ namespace engine {
 		rendersystem rendersys{ deviceInstance, rendererInstance.getSwapchainRenderPass() };
         camera cameraInstance = {};
         
-        // cameraInstance.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
         cameraInstance.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
+
+        // store the camera's current state
+        auto viewerEntity = entity::createEntity();
+        input cameraController = {};
+
+        // for game loop timing
+        auto currentTime = std::chrono::high_resolution_clock::now();
 
 		while (!windowInstance.shouldClose()) {
 			glfwPollEvents();
+            auto newTime = std::chrono::high_resolution_clock::now();
+            float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+            currentTime = newTime;
+            frameTime = glm::min(frameTime, 1.f);
+            cameraController.moveInPlaneXZ(windowInstance.getGLFWwindow(), frameTime, viewerEntity);
+            cameraInstance.setViewYXZ(viewerEntity.transform.translation, viewerEntity.transform.rotation);
             float aspect = rendererInstance.getAspectRatio();
-            // cameraInstance.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1); // 1 by 1 by 1 access line cube
             cameraInstance.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			if (auto commandBuffer = rendererInstance.beginFrame()) {
 				rendererInstance.beginSwapchainRenderPass(commandBuffer);

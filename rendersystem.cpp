@@ -60,10 +60,6 @@ namespace engine {
 
 		// loop through all entities and record their binds and draws to the command buffer
 		for (auto& entityInstance : entities) {
-			entityInstance.transform.rotation.y = glm::mod(entityInstance.transform.rotation.y + 0.01f, glm::two_pi<float>());
-			entityInstance.transform.rotation.x = glm::mod(entityInstance.transform.rotation.x + 0.005f, glm::two_pi<float>());
-			entityInstance.transform.rotation.z = glm::mod(entityInstance.transform.rotation.z + 0.007f, glm::two_pi<float>());
-
 			SimplePushConstantData push = {};
 			push.color = entityInstance.color;
 			push.transform = projectionView * entityInstance.transform.mat4();
