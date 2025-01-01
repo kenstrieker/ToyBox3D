@@ -9,7 +9,7 @@
 namespace engine {
 	struct SimplePushConstantData {
 		glm::mat4 transform{ 1.f };
-		alignas(16) glm::vec3 color;
+		glm::mat4 normalMatrix{ 1.f };
 	};
 
 	rendersystem::rendersystem(device& deviceInstance, VkRenderPass renderPass) : deviceInstance{ deviceInstance } {
@@ -61,8 +61,9 @@ namespace engine {
 		// loop through all entities and record their binds and draws to the command buffer
 		for (auto& entityInstance : entities) {
 			SimplePushConstantData push = {};
-			push.color = entityInstance.color;
-			push.transform = projectionView * entityInstance.transform.mat4();
+			auto modelMatrix = entityInstance.transform.mat4();
+			push.transform = projectionView * modelMatrix;
+			push.normalMatrix = entityInstance.transform.normalMatrix();
 
 			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 

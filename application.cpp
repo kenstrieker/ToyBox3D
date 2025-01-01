@@ -53,11 +53,14 @@ namespace engine {
 	}
 
     void application::loadEntities() {
-        std::shared_ptr<model> modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\smooth_vase.obj");
+        std::shared_ptr<model> modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\tree.obj");
         auto cube = entity::createEntity();
         cube.modelInstance = modelInstance;
-        cube.transform.translation = { .0f, .0f, 2.5f };
-        cube.transform.scale = { .5f, .5f, .5f };
+        // cube.transform.translation = { .0f, .0f, 2.5f };
+        // cube.transform.scale = { .5f, .5f, .5f };
+        cube.transform.translation = { .0f, 1.0f, 2.5f };
+        cube.transform.scale = { .05f, .05f, .05f };
+        cube.transform.rotation = { .0f, .0f, 3.14f };
         entities.push_back(std::move(cube));
     }
 }
