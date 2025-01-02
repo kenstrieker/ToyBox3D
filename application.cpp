@@ -15,11 +15,14 @@
 namespace engine {
     // struct to create a global uniform buffer
     struct GlobalUbo {
-        glm::mat4 projectionView{ 1.f };
-        glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+        alignas(16) glm::mat4 projectionView{ 1.f };
+        alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
     };
 
-	application::application() { loadEntities(); }
+	application::application() {
+        globalPool = descriptorPool::Builder(deviceInstance).setMaxSets(swapchain::MAX_FRAMES_IN_FLIGHT).addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swapchain::MAX_FRAMES_IN_FLIGHT).build();
+        loadEntities(); 
+    }
 
 	application::~application() {}
 
@@ -30,7 +33,14 @@ namespace engine {
             uboBuffers[i]->map();
         }
 
-		rendersystem rendersys{ deviceInstance, rendererInstance.getSwapchainRenderPass() };
+        auto globalSetLayout = descriptorSetLayout::Builder(deviceInstance).addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT).build();
+        std::vector<VkDescriptorSet> globalDescriptorSets(swapchain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < globalDescriptorSets.size(); i++) {
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            descriptorWriter(*globalSetLayout, *globalPool).writeBuffer(0, &bufferInfo).build(globalDescriptorSets[i]);
+        }
+
+		rendersystem rendersys{ deviceInstance, rendererInstance.getSwapchainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
         camera cameraInstance = {};
         
         cameraInstance.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
@@ -61,7 +71,7 @@ namespace engine {
                 uboBuffers[frameIndex]->flush();
 
                 // render
-                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance };
+                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance, globalDescriptorSets[frameIndex] };
 				rendererInstance.beginSwapchainRenderPass(commandBuffer);
 				rendersys.renderEntities(frameInfo, entities);
 				rendererInstance.endSwapchainRenderPass(commandBuffer);

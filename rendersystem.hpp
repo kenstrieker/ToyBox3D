@@ -13,11 +13,12 @@ namespace engine {
 		float frameTime;
 		VkCommandBuffer commandBuffer;
 		camera& cameraInstance;
+		VkDescriptorSet globalDescriptorSet;
 	};
 
 	class rendersystem {
 	public:
-		rendersystem(device& deviceInstance, VkRenderPass renderPass); // constructor
+		rendersystem(device& deviceInstance, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout); // constructor
 		~rendersystem(); // destructor
 
 		// not copyable or movable
@@ -27,7 +28,7 @@ namespace engine {
 		void renderEntities(FrameInfo& frameInfo, std::vector<entity>& entities); // render the entities
 
 	private:
-		void createPipelineLayout(); // create a pipeline layout
+		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout); // create a pipeline layout
 		void createPipeline(VkRenderPass renderPass); // create a pipeline
 		
 		device& deviceInstance; // a handle for the device instance
