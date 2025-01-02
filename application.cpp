@@ -1,6 +1,7 @@
 #include "application.hpp"
 #include "camera.hpp"
 #include "rendersystem.hpp"
+#include "buffer.hpp"
 #include "input.hpp"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -12,13 +13,23 @@
 #include <cassert>
 
 namespace engine {
-	application::application() {
-		loadEntities();
-	}
+    // struct to create a global uniform buffer
+    struct GlobalUbo {
+        glm::mat4 projectionView{ 1.f };
+        glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+    };
+
+	application::application() { loadEntities(); }
 
 	application::~application() {}
 
 	void application::run() {
+        std::vector<std::unique_ptr<buffer>> uboBuffers(swapchain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < uboBuffers.size(); i++) {
+            uboBuffers[i] = std::make_unique<buffer>(deviceInstance, sizeof(GlobalUbo), 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+            uboBuffers[i]->map();
+        }
+
 		rendersystem rendersys{ deviceInstance, rendererInstance.getSwapchainRenderPass() };
         camera cameraInstance = {};
         
@@ -42,8 +53,17 @@ namespace engine {
             float aspect = rendererInstance.getAspectRatio();
             cameraInstance.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			if (auto commandBuffer = rendererInstance.beginFrame()) {
+                // prepare and update entities in memory
+                int frameIndex = rendererInstance.getFrameIndex();
+                GlobalUbo ubo = {};
+                ubo.projectionView = cameraInstance.getProjection() * cameraInstance.getView();
+                uboBuffers[frameIndex]->writeToBuffer(&ubo);
+                uboBuffers[frameIndex]->flush();
+
+                // render
+                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance };
 				rendererInstance.beginSwapchainRenderPass(commandBuffer);
-				rendersys.renderEntities(commandBuffer, entities, cameraInstance);
+				rendersys.renderEntities(frameInfo, entities);
 				rendererInstance.endSwapchainRenderPass(commandBuffer);
 				rendererInstance.endFrame();
 			}

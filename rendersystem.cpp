@@ -53,10 +53,10 @@ namespace engine {
 		pipelineInstance = std::make_unique<pipeline>(deviceInstance, "simple_shader.vert.spv", "simple_shader.frag.spv", pipelineConfig);
 	}
 
-	void rendersystem::renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities, const camera& cameraInstance) {
-		pipelineInstance->bind(commandBuffer);
+	void rendersystem::renderEntities(FrameInfo& frameInfo, std::vector<entity>& entities) {
+		pipelineInstance->bind(frameInfo.commandBuffer);
 
-		auto projectionView = cameraInstance.getProjection() * cameraInstance.getView();
+		auto projectionView = frameInfo.cameraInstance.getProjection() * frameInfo.cameraInstance.getView();
 
 		// loop through all entities and record their binds and draws to the command buffer
 		for (auto& entityInstance : entities) {
@@ -65,10 +65,10 @@ namespace engine {
 			push.transform = projectionView * modelMatrix;
 			push.normalMatrix = entityInstance.transform.normalMatrix();
 
-			vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+			vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 
-			entityInstance.modelInstance->bind(commandBuffer);
-			entityInstance.modelInstance->draw(commandBuffer);
+			entityInstance.modelInstance->bind(frameInfo.commandBuffer);
+			entityInstance.modelInstance->draw(frameInfo.commandBuffer);
 		}
 	}
 }

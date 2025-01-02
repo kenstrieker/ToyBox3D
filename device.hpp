@@ -22,7 +22,6 @@ namespace engine {
 	};
 
 	class device {
-
 	public:
 #ifdef NDEBUG // not to be compiled in debug mode
 		const bool enableValidationLayers = false;

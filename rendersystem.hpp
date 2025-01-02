@@ -7,6 +7,14 @@
 #include <vector>
 
 namespace engine {
+	// struct for wrapping all frame-relevant data into a single object
+	struct FrameInfo {
+		int frameIndex;
+		float frameTime;
+		VkCommandBuffer commandBuffer;
+		camera& cameraInstance;
+	};
+
 	class rendersystem {
 	public:
 		rendersystem(device& deviceInstance, VkRenderPass renderPass); // constructor
@@ -16,7 +24,7 @@ namespace engine {
 		rendersystem(const rendersystem&) = delete;
 		rendersystem& operator = (const rendersystem&) = delete;
 
-		void renderEntities(VkCommandBuffer commandBuffer, std::vector<entity>& entities, const camera& cameraInstance); // render the entities
+		void renderEntities(FrameInfo& frameInfo, std::vector<entity>& entities); // render the entities
 
 	private:
 		void createPipelineLayout(); // create a pipeline layout

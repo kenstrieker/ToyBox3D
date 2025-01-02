@@ -1,5 +1,6 @@
 #pragma once
 #include "device.hpp"
+#include "buffer.hpp"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -45,12 +46,11 @@ namespace engine {
 		void createVertexBuffers(const std::vector<Vertex>& vertices); // to create the vertex buffers
 		void createIndexBuffer(const std::vector<uint32_t>& indices); // to create the index buffers
 		device& deviceInstance; // reference to the device
-		VkBuffer vertexBuffer; // a handle for the vertex buffer
-		VkDeviceMemory vertexBufferMemory; // a handle for the memory containing the vertex buffer
+
+		std::unique_ptr<buffer> vertexBuffer; // a handle for the vertex buffer
 		uint32_t vertexCount; // a handle for the count of vertices
 		bool hasIndexBuffer = false; // a flag for using index buffers
-		VkBuffer indexBuffer; // a handle for the index buffer
-		VkDeviceMemory indexBufferMemory; // a handle for the memory containing the index buffer
+		std::unique_ptr<buffer> indexBuffer; // a handle for the index buffer
 		uint32_t indexCount; // a handle for the count of indices
 	};
 }
