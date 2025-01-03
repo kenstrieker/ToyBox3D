@@ -14,6 +14,7 @@ namespace engine {
 		VkCommandBuffer commandBuffer;
 		camera& cameraInstance;
 		VkDescriptorSet globalDescriptorSet;
+		entity::Map& gameEntities;
 	};
 
 	class rendersystem {
@@ -25,7 +26,7 @@ namespace engine {
 		rendersystem(const rendersystem&) = delete;
 		rendersystem& operator = (const rendersystem&) = delete;
 
-		void renderEntities(FrameInfo& frameInfo, std::vector<entity>& entities); // render the entities
+		void renderEntities(FrameInfo& frameInfo); // render the entities
 
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout); // create a pipeline layout

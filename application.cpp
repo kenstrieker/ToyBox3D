@@ -35,7 +35,7 @@ namespace engine {
             uboBuffers[i]->map();
         }
 
-        auto globalSetLayout = descriptorSetLayout::Builder(deviceInstance).addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT).build();
+        auto globalSetLayout = descriptorSetLayout::Builder(deviceInstance).addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS).build();
         std::vector<VkDescriptorSet> globalDescriptorSets(swapchain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < globalDescriptorSets.size(); i++) {
             auto bufferInfo = uboBuffers[i]->descriptorInfo();
@@ -74,9 +74,9 @@ namespace engine {
                 uboBuffers[frameIndex]->flush();
 
                 // render
-                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance, globalDescriptorSets[frameIndex] };
+                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance, globalDescriptorSets[frameIndex], gameEntities };
 				rendererInstance.beginSwapchainRenderPass(commandBuffer);
-				rendersys.renderEntities(frameInfo, entities);
+				rendersys.renderEntities(frameInfo);
 				rendererInstance.endSwapchainRenderPass(commandBuffer);
 				rendererInstance.endFrame();
 			}
@@ -93,7 +93,7 @@ namespace engine {
         tree.transform.translation = { .0f, 1.0f, 0.f };
         tree.transform.scale = { .05f, .05f, .05f };
         tree.transform.rotation = { .0f, .0f, 3.14f };
-        entities.push_back(std::move(tree));
+        gameEntities.emplace(tree.getId(), std::move(tree));
 
         modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\flat_vase.obj");
         
@@ -101,7 +101,7 @@ namespace engine {
         vase.modelInstance = modelInstance;
         vase.transform.translation = { .0f, 2.08f, 0.f };
         vase.transform.scale = { 3.f, 3.f, 3.f };
-        entities.push_back(std::move(vase));
+        gameEntities.emplace(vase.getId(), std::move(vase));
 
         modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\quad.obj");
 
@@ -109,6 +109,6 @@ namespace engine {
         floor.modelInstance = modelInstance;
         floor.transform.translation = { .0f, 2.08f, 0.f };
         floor.transform.scale = { 5.f, 5.f, 5.f };
-        entities.push_back(std::move(floor));
+        gameEntities.emplace(floor.getId(), std::move(floor));
     }
 }

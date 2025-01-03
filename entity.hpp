@@ -2,6 +2,7 @@
 #include "model.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
+#include <unordered_map>
 
 namespace engine {
 	// struct for translating
@@ -20,6 +21,7 @@ namespace engine {
 	class entity {
 	public:
 		using id_t = unsigned int;
+		using Map = std::unordered_map<id_t, entity>;
 
 		// create the entity
 		static entity createEntity() {

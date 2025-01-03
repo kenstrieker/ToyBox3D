@@ -55,13 +55,15 @@ namespace engine {
 		pipelineInstance = std::make_unique<pipeline>(deviceInstance, "simple_shader.vert.spv", "simple_shader.frag.spv", pipelineConfig);
 	}
 
-	void rendersystem::renderEntities(FrameInfo& frameInfo, std::vector<entity>& entities) {
+	void rendersystem::renderEntities(FrameInfo& frameInfo) {
 		pipelineInstance->bind(frameInfo.commandBuffer);
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		// loop through all entities and record their binds and draws to the command buffer
-		for (auto& entityInstance : entities) {
+		for (auto& kv : frameInfo.gameEntities) {
+			auto& entityInstance = kv.second;
+			if (entityInstance.modelInstance == nullptr) continue;
 			SimplePushConstantData push = {};
 			push.modelMatrix = entityInstance.transform.mat4();
 			push.normalMatrix = entityInstance.transform.normalMatrix();
