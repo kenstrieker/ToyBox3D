@@ -16,7 +16,9 @@ namespace engine {
     // struct to create a global uniform buffer
     struct GlobalUbo {
         alignas(16) glm::mat4 projectionView{ 1.f };
-        alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+        glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, .02f }; // r, g, b, intensity
+        glm::vec3 lightPosition{ -1.f };
+        alignas(16) glm::vec4 lightColor{ 1.f }; // r, g, b, intensity
     };
 
 	application::application() {
@@ -47,6 +49,7 @@ namespace engine {
 
         // store the camera's current state
         auto viewerEntity = entity::createEntity();
+        viewerEntity.transform.translation.z = -2.5f;
         input cameraController = {};
 
         // for game loop timing
@@ -61,7 +64,7 @@ namespace engine {
             cameraController.moveInPlaneXZ(windowInstance.getGLFWwindow(), frameTime, viewerEntity);
             cameraInstance.setViewYXZ(viewerEntity.transform.translation, viewerEntity.transform.rotation);
             float aspect = rendererInstance.getAspectRatio();
-            cameraInstance.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+            cameraInstance.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 			if (auto commandBuffer = rendererInstance.beginFrame()) {
                 // prepare and update entities in memory
                 int frameIndex = rendererInstance.getFrameIndex();
@@ -84,13 +87,28 @@ namespace engine {
 
     void application::loadEntities() {
         std::shared_ptr<model> modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\tree.obj");
-        auto cube = entity::createEntity();
-        cube.modelInstance = modelInstance;
-        // cube.transform.translation = { .0f, .0f, 2.5f };
-        // cube.transform.scale = { .5f, .5f, .5f };
-        cube.transform.translation = { .0f, 1.0f, 2.5f };
-        cube.transform.scale = { .05f, .05f, .05f };
-        cube.transform.rotation = { .0f, .0f, 3.14f };
-        entities.push_back(std::move(cube));
+
+        auto tree = entity::createEntity();
+        tree.modelInstance = modelInstance;
+        tree.transform.translation = { .0f, 1.0f, 0.f };
+        tree.transform.scale = { .05f, .05f, .05f };
+        tree.transform.rotation = { .0f, .0f, 3.14f };
+        entities.push_back(std::move(tree));
+
+        modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\flat_vase.obj");
+        
+        auto vase = entity::createEntity();
+        vase.modelInstance = modelInstance;
+        vase.transform.translation = { .0f, 2.08f, 0.f };
+        vase.transform.scale = { 3.f, 3.f, 3.f };
+        entities.push_back(std::move(vase));
+
+        modelInstance = model::createModelFromFile(deviceInstance, "A:\\Dev\\Libraries\\models\\quad.obj");
+
+        auto floor = entity::createEntity();
+        floor.modelInstance = modelInstance;
+        floor.transform.translation = { .0f, 2.08f, 0.f };
+        floor.transform.scale = { 5.f, 5.f, 5.f };
+        entities.push_back(std::move(floor));
     }
 }
