@@ -1,6 +1,7 @@
 #include "application.hpp"
 #include "camera.hpp"
 #include "rendersystem.hpp"
+#include "pointlightsystem.hpp"
 #include "buffer.hpp"
 #include "input.hpp"
 #define GLM_FORCE_RADIANS
@@ -15,7 +16,8 @@
 namespace engine {
     // struct to create a global uniform buffer
     struct GlobalUbo {
-        alignas(16) glm::mat4 projectionView{ 1.f };
+        glm::mat4 projection{ 1.f };
+        glm::mat4 view{ 1.f };
         glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, .02f }; // r, g, b, intensity
         glm::vec3 lightPosition{ -1.f };
         alignas(16) glm::vec4 lightColor{ 1.f }; // r, g, b, intensity
@@ -43,6 +45,7 @@ namespace engine {
         }
 
 		rendersystem rendersys{ deviceInstance, rendererInstance.getSwapchainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
+        pointlightsystem pointlightsys{ deviceInstance, rendererInstance.getSwapchainRenderPass(), globalSetLayout->getDescriptorSetLayout() };
         camera cameraInstance = {};
         
         cameraInstance.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
@@ -69,7 +72,8 @@ namespace engine {
                 // prepare and update entities in memory
                 int frameIndex = rendererInstance.getFrameIndex();
                 GlobalUbo ubo = {};
-                ubo.projectionView = cameraInstance.getProjection() * cameraInstance.getView();
+                ubo.projection = cameraInstance.getProjection();
+                ubo.view = cameraInstance.getView();
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
@@ -77,6 +81,7 @@ namespace engine {
                 FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance, globalDescriptorSets[frameIndex], gameEntities };
 				rendererInstance.beginSwapchainRenderPass(commandBuffer);
 				rendersys.renderEntities(frameInfo);
+                pointlightsys.render(frameInfo);
 				rendererInstance.endSwapchainRenderPass(commandBuffer);
 				rendererInstance.endFrame();
 			}
