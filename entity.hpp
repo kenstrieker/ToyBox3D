@@ -18,6 +18,11 @@ namespace engine {
 		glm::mat3 normalMatrix();
 	};
 
+	// struct for point lights
+	struct PointLightComponent {
+		float lightIntensity = 1.0f;
+	};
+
 	class entity {
 	public:
 		using id_t = unsigned int;
@@ -35,11 +40,15 @@ namespace engine {
 		entity(entity&&) = default;
 		entity& operator = (entity&&) = default;
 
+		static entity makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
+
 		id_t getId() { return id; } // return the entity id
 
 		std::shared_ptr<model> modelInstance = {};
 		glm::vec3 color = {};
 		TransformComponent transform = {};
+
+		std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
 	private:
 		entity(id_t entityId) : id{entityId} {} // constructor

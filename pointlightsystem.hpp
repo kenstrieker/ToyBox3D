@@ -17,6 +17,7 @@ namespace engine {
 		pointlightsystem(const pointlightsystem&) = delete;
 		pointlightsystem& operator = (const pointlightsystem&) = delete;
 
+		void update(FrameInfo& frameInfo, GlobalUbo& ubo); // update the point light array
 		void render(FrameInfo& frameInfo); // render the entities
 
 	private:

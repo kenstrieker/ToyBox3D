@@ -14,15 +14,6 @@
 #include <cassert>
 
 namespace engine {
-    // struct to create a global uniform buffer
-    struct GlobalUbo {
-        glm::mat4 projection{ 1.f };
-        glm::mat4 view{ 1.f };
-        glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, .02f }; // r, g, b, intensity
-        glm::vec3 lightPosition{ -1.f };
-        alignas(16) glm::vec4 lightColor{ 1.f }; // r, g, b, intensity
-    };
-
 	application::application() {
         globalPool = descriptorPool::Builder(deviceInstance).setMaxSets(swapchain::MAX_FRAMES_IN_FLIGHT).addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, swapchain::MAX_FRAMES_IN_FLIGHT).build();
         loadEntities(); 
@@ -71,14 +62,15 @@ namespace engine {
 			if (auto commandBuffer = rendererInstance.beginFrame()) {
                 // prepare and update entities in memory
                 int frameIndex = rendererInstance.getFrameIndex();
+                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance, globalDescriptorSets[frameIndex], gameEntities };
                 GlobalUbo ubo = {};
                 ubo.projection = cameraInstance.getProjection();
                 ubo.view = cameraInstance.getView();
+                pointlightsys.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 // render
-                FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, cameraInstance, globalDescriptorSets[frameIndex], gameEntities };
 				rendererInstance.beginSwapchainRenderPass(commandBuffer);
 				rendersys.renderEntities(frameInfo);
                 pointlightsys.render(frameInfo);
@@ -115,5 +107,22 @@ namespace engine {
         floor.transform.translation = { .0f, 2.08f, 0.f };
         floor.transform.scale = { 5.f, 5.f, 5.f };
         gameEntities.emplace(floor.getId(), std::move(floor));
+
+        std::vector<glm::vec3> lightColors {
+            {1.f, .1f, .1f},
+            {.1f, .1f, 1.f},
+            {.1f, 1.f, .1f},
+            {1.f, 1.f, .1f},
+            {.1f, 1.f, 1.f},
+            {1.f, 1.f, 1.f}
+        };
+
+        for (int i = 0; i < lightColors.size(); i++) {
+            auto pointLight = entity::makePointLight(0.2f);
+            pointLight.color = lightColors[i];
+            auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), { 0.f, -1.f, 0.f });
+            pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+            gameEntities.emplace(pointLight.getId(), std::move(pointLight));
+        }
     }
 }

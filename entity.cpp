@@ -30,4 +30,13 @@ namespace engine {
 			{ invScale.z * (c2 * s1), invScale.z * (-s2), invScale.z * (c1 * c2) }
 		};
 	}
+
+	entity entity::makePointLight(float intensity, float radius, glm::vec3 color) {
+		entity entityInstance = entity::createEntity();
+		entityInstance.color = color;
+		entityInstance.transform.scale.x = radius;
+		entityInstance.pointLight = std::make_unique<PointLightComponent>();
+		entityInstance.pointLight->lightIntensity = intensity;
+		return entityInstance;
+	}
 }
