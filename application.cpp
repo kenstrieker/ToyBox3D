@@ -66,6 +66,7 @@ namespace engine {
                 GlobalUbo ubo = {};
                 ubo.projection = cameraInstance.getProjection();
                 ubo.view = cameraInstance.getView();
+                ubo.inverseView = cameraInstance.getInverseView();
                 pointlightsys.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
