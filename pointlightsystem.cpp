@@ -6,23 +6,23 @@
 #include <stdexcept>
 #include <array>
 
-namespace engine {
+namespace ToyBox {
 	struct PointLightPushConstants {
 		glm::vec4 position = {};
 		glm::vec4 color = {};
 		float radius;
 	};
 
-	pointlightsystem::pointlightsystem(device& deviceInstance, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : deviceInstance{ deviceInstance } {
+	PointLightSystem::PointLightSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : device{ device } {
 		createPipelineLayout(globalSetLayout);
 		createPipeline(renderPass);
 	}
 
-	pointlightsystem::~pointlightsystem() {
-		vkDestroyPipelineLayout(deviceInstance.getDevice(), pipelineLayout, nullptr);
+	PointLightSystem::~PointLightSystem() {
+		vkDestroyPipelineLayout(device.getDevice(), pipelineLayout, nullptr);
 	}
 
-	void pointlightsystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
+	void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
 		// create a push constant range
 		VkPushConstantRange pushConstantRange = {};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -40,25 +40,25 @@ namespace engine {
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		// create the pipeline layout
-		if (vkCreatePipelineLayout(deviceInstance.getDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(device.getDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
 	}
 
-	void pointlightsystem::createPipeline(VkRenderPass renderPass) {
+	void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		// create a config for the pipeline
 		PipelineConfigInfo pipelineConfig = {};
-		pipeline::defaultPipelineConfigInfo(pipelineConfig);
+		Pipeline::defaultPipelineConfigInfo(pipelineConfig);
 		pipelineConfig.attributeDescriptions.clear();
 		pipelineConfig.bindingDescriptions.clear();
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = pipelineLayout;
-		pipelineInstance = std::make_unique<pipeline>(deviceInstance, "point_light.vert.spv", "point_light.frag.spv", pipelineConfig);
+		pipeline = std::make_unique<Pipeline>(device, "point_light.vert.spv", "point_light.frag.spv", pipelineConfig);
 	}
 
-	void pointlightsystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
+	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
 		auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime, { 0.f, -1.f, 0.f });
 
 		int lightIndex = 0;
@@ -81,8 +81,8 @@ namespace engine {
 		ubo.numLights = lightIndex;
 	}
 
-	void pointlightsystem::render(FrameInfo& frameInfo) {
-		pipelineInstance->bind(frameInfo.commandBuffer);
+	void PointLightSystem::render(FrameInfo& frameInfo) {
+		pipeline->bind(frameInfo.commandBuffer);
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 

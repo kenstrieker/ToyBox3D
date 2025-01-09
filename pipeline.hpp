@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace engine {
+namespace ToyBox {
 	// struct to contain and share data on how we want to configure the pipeline
 	struct PipelineConfigInfo {
 		PipelineConfigInfo(const PipelineConfigInfo&) = delete;
@@ -25,14 +25,14 @@ namespace engine {
 		uint32_t subpass = 0;
 	};
 
-	class pipeline {
+	class Pipeline {
 	public:
-		pipeline(device& deviceInstance, const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo); // constructor
-		~pipeline(); // destructor
+		Pipeline(Device& device, const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo); // constructor
+		~Pipeline(); // destructor
 
 		// not copyable or movable
-		pipeline(const pipeline&) = delete;
-		pipeline& operator = (const pipeline&) = delete;
+		Pipeline(const Pipeline&) = delete;
+		Pipeline& operator = (const Pipeline&) = delete;
 
 		void bind(VkCommandBuffer commandBuffer); // bind a pipeline
 		static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo); // to set up the pipeline's fixed functions
@@ -42,7 +42,7 @@ namespace engine {
 		void createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo); // to set up the graphics pipeline
 		void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule); // for loading vertex buffer data
 
-		device& deviceInstance; // reference to device; this will outlive any instances of this class as a pipeline depends on a device to exist
+		Device& device; // reference to device; this will outlive any instances of this class as a pipeline depends on a device to exist
 		VkPipeline graphicsPipeline; // a handle to the graphics pipeline
 		VkShaderModule vertShaderModule; // a handle to the vertex shader
 		VkShaderModule fragShaderModule; // a handle to the fragment shader

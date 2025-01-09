@@ -7,8 +7,8 @@
 #include <vector>
 #include <memory>
 
-namespace engine {
-	class model {
+namespace ToyBox {
+	class Model {
 	public:
 		// struct for vertex attributes to make them easier to work with
 		struct Vertex {
@@ -30,14 +30,14 @@ namespace engine {
 			void loadModel(const std::string& filepath);
 		};
 
-		model(device& deviceInstance, const model::Builder& builderInstance); // constructor
-		~model(); // destructor
+		Model(Device& device, const Model::Builder& builder); // constructor
+		~Model(); // destructor
 
 		// not copyable or movable
-		model(const model&) = delete;
-		model& operator = (const model&) = delete;
+		Model(const Model&) = delete;
+		Model& operator = (const Model&) = delete;
 
-		static std::unique_ptr<model> createModelFromFile(device& deviceInstance, const std::string& filepath);
+		static std::unique_ptr<Model> createModelFromFile(Device& device, const std::string& filepath);
 
 		void bind(VkCommandBuffer commandBuffer);
 		void draw(VkCommandBuffer commandBuffer);
@@ -45,12 +45,12 @@ namespace engine {
 	private:
 		void createVertexBuffers(const std::vector<Vertex>& vertices); // to create the vertex buffers
 		void createIndexBuffer(const std::vector<uint32_t>& indices); // to create the index buffers
-		device& deviceInstance; // reference to the device
+		Device& device; // reference to the device
 
-		std::unique_ptr<buffer> vertexBuffer; // a handle for the vertex buffer
+		std::unique_ptr<Buffer> vertexBuffer; // a handle for the vertex buffer
 		uint32_t vertexCount; // a handle for the count of vertices
 		bool hasIndexBuffer = false; // a flag for using index buffers
-		std::unique_ptr<buffer> indexBuffer; // a handle for the index buffer
+		std::unique_ptr<Buffer> indexBuffer; // a handle for the index buffer
 		uint32_t indexCount; // a handle for the count of indices
 	};
 }

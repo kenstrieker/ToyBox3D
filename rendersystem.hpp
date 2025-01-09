@@ -7,15 +7,15 @@
 #include <memory>
 #include <vector>
 
-namespace engine {
-	class rendersystem {
+namespace ToyBox {
+	class RenderSystem {
 	public:
-		rendersystem(device& deviceInstance, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout); // constructor
-		~rendersystem(); // destructor
+		RenderSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout); // constructor
+		~RenderSystem(); // destructor
 
 		// not copyable or movable
-		rendersystem(const rendersystem&) = delete;
-		rendersystem& operator = (const rendersystem&) = delete;
+		RenderSystem(const RenderSystem&) = delete;
+		RenderSystem& operator = (const RenderSystem&) = delete;
 
 		void renderEntities(FrameInfo& frameInfo); // render the entities
 
@@ -23,8 +23,8 @@ namespace engine {
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout); // create a pipeline layout
 		void createPipeline(VkRenderPass renderPass); // create a pipeline
 		
-		device& deviceInstance; // a handle for the device instance
-		std::unique_ptr<pipeline> pipelineInstance; // a handle for the pipeline instance
+		Device& device; // a handle for the device instance
+		std::unique_ptr<Pipeline> pipeline; // a handle for the pipeline instance
 		VkPipelineLayout pipelineLayout; // a handle for the pipeline layout
 	};
 }

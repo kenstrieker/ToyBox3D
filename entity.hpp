@@ -4,7 +4,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace engine {
+namespace ToyBox {
 	// struct for translating
 	struct TransformComponent {
 		glm::vec3 translation = {}; // position offset
@@ -23,35 +23,35 @@ namespace engine {
 		float lightIntensity = 1.0f;
 	};
 
-	class entity {
+	class Entity {
 	public:
 		using id_t = unsigned int;
-		using Map = std::unordered_map<id_t, entity>;
+		using Map = std::unordered_map<id_t, Entity>;
 
 		// create the entity
-		static entity createEntity() {
+		static Entity createEntity() {
 			static id_t currentId = 0;
-			return entity{ currentId++ };
+			return Entity{ currentId++ };
 		}
 
 		// not copyable or movable
-		entity(const entity&) = delete;
-		entity& operator = (const entity&) = delete;
-		entity(entity&&) = default;
-		entity& operator = (entity&&) = default;
+		Entity(const Entity&) = delete;
+		Entity& operator = (const Entity&) = delete;
+		Entity(Entity&&) = default;
+		Entity& operator = (Entity&&) = default;
 
-		static entity makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
+		static Entity makePointLight(float intensity = 10.f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.f));
 
 		id_t getId() { return id; } // return the entity id
 
-		std::shared_ptr<model> modelInstance = {};
+		std::shared_ptr<Model> model = {};
 		glm::vec3 color = {};
 		TransformComponent transform = {};
 
 		std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
 	private:
-		entity(id_t entityId) : id{entityId} {} // constructor
+		Entity(id_t entityId) : id{entityId} {} // constructor
 
 		id_t id;
 	};

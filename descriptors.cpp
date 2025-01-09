@@ -2,11 +2,11 @@
 #include <cassert>
 #include <stdexcept>
 
-namespace engine {
+namespace ToyBox {
 
     // *************** Descriptor Set Layout Builder *********************
 
-    descriptorSetLayout::Builder& descriptorSetLayout::Builder::addBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count) {
+    DescriptorSetLayout::Builder& DescriptorSetLayout::Builder::addBinding(uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags, uint32_t count) {
         assert(bindings.count(binding) == 0 && "Binding already in use");
         VkDescriptorSetLayoutBinding layoutBinding = {};
         layoutBinding.binding = binding;
@@ -17,13 +17,13 @@ namespace engine {
         return *this;
     }
 
-    std::unique_ptr<descriptorSetLayout> descriptorSetLayout::Builder::build() const {
-        return std::make_unique<descriptorSetLayout>(deviceInstance, bindings);
+    std::unique_ptr<DescriptorSetLayout> DescriptorSetLayout::Builder::build() const {
+        return std::make_unique<DescriptorSetLayout>(device, bindings);
     }
 
     // *************** Descriptor Set Layout *********************
 
-    descriptorSetLayout::descriptorSetLayout(device& deviceInstance, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings) : deviceInstance{ deviceInstance }, bindings{ bindings } {
+    DescriptorSetLayout::DescriptorSetLayout(Device& device, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings) : device{ device }, bindings{ bindings } {
         std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings = {};
         for (auto kv : bindings) {
             setLayoutBindings.push_back(kv.second);
@@ -34,38 +34,38 @@ namespace engine {
         descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
         descriptorSetLayoutInfo.pBindings = setLayoutBindings.data();
 
-        if (vkCreateDescriptorSetLayout(deviceInstance.getDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayoutInstance) != VK_SUCCESS) {
+        if (vkCreateDescriptorSetLayout(device.getDevice(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
     }
 
-    descriptorSetLayout::~descriptorSetLayout() {
-        vkDestroyDescriptorSetLayout(deviceInstance.getDevice(), descriptorSetLayoutInstance, nullptr);
+    DescriptorSetLayout::~DescriptorSetLayout() {
+        vkDestroyDescriptorSetLayout(device.getDevice(), descriptorSetLayout, nullptr);
     }
 
     // *************** Descriptor Pool Builder *********************
 
-    descriptorPool::Builder& descriptorPool::Builder::addPoolSize(VkDescriptorType descriptorType, uint32_t count) {
+    DescriptorPool::Builder& DescriptorPool::Builder::addPoolSize(VkDescriptorType descriptorType, uint32_t count) {
         poolSizes.push_back({ descriptorType, count });
         return *this;
     }
 
-    descriptorPool::Builder& descriptorPool::Builder::setPoolFlags(VkDescriptorPoolCreateFlags flags) {
+    DescriptorPool::Builder& DescriptorPool::Builder::setPoolFlags(VkDescriptorPoolCreateFlags flags) {
         poolFlags = flags;
         return *this;
     }
-    descriptorPool::Builder& descriptorPool::Builder::setMaxSets(uint32_t count) {
+    DescriptorPool::Builder& DescriptorPool::Builder::setMaxSets(uint32_t count) {
         maxSets = count;
         return *this;
     }
 
-    std::unique_ptr<descriptorPool> descriptorPool::Builder::build() const {
-        return std::make_unique<descriptorPool>(deviceInstance, maxSets, poolFlags, poolSizes);
+    std::unique_ptr<DescriptorPool> DescriptorPool::Builder::build() const {
+        return std::make_unique<DescriptorPool>(device, maxSets, poolFlags, poolSizes);
     }
 
     // *************** Descriptor Pool *********************
 
-    descriptorPool::descriptorPool(device& deviceInstance, uint32_t maxSets, VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes) : deviceInstance{ deviceInstance } {
+    DescriptorPool::DescriptorPool(Device& device, uint32_t maxSets, VkDescriptorPoolCreateFlags poolFlags, const std::vector<VkDescriptorPoolSize>& poolSizes) : device{ device } {
         VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
         descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
@@ -73,44 +73,44 @@ namespace engine {
         descriptorPoolInfo.maxSets = maxSets;
         descriptorPoolInfo.flags = poolFlags;
 
-        if (vkCreateDescriptorPool(deviceInstance.getDevice(), &descriptorPoolInfo, nullptr, &descriptorPoolInstance) !=
+        if (vkCreateDescriptorPool(device.getDevice(), &descriptorPoolInfo, nullptr, &descriptorPool) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
         }
     }
 
-    descriptorPool::~descriptorPool() {
-        vkDestroyDescriptorPool(deviceInstance.getDevice(), descriptorPoolInstance, nullptr);
+    DescriptorPool::~DescriptorPool() {
+        vkDestroyDescriptorPool(device.getDevice(), descriptorPool, nullptr);
     }
 
-    bool descriptorPool::allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayoutInstance, VkDescriptorSet& descriptor) const {
+    bool DescriptorPool::allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptor) const {
         VkDescriptorSetAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPoolInstance;
-        allocInfo.pSetLayouts = &descriptorSetLayoutInstance;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.pSetLayouts = &descriptorSetLayout;
         allocInfo.descriptorSetCount = 1;
 
         // Might want to create a "DescriptorPoolManager" class that handles this case, and builds
         // a new pool whenever an old pool fills up. But this is beyond our current scope
-        if (vkAllocateDescriptorSets(deviceInstance.getDevice(), &allocInfo, &descriptor) != VK_SUCCESS) {
+        if (vkAllocateDescriptorSets(device.getDevice(), &allocInfo, &descriptor) != VK_SUCCESS) {
             return false;
         }
         return true;
     }
 
-    void descriptorPool::freeDescriptors(std::vector<VkDescriptorSet>& descriptors) const {
-        vkFreeDescriptorSets(deviceInstance.getDevice(), descriptorPoolInstance, static_cast<uint32_t>(descriptors.size()), descriptors.data());
+    void DescriptorPool::freeDescriptors(std::vector<VkDescriptorSet>& descriptors) const {
+        vkFreeDescriptorSets(device.getDevice(), descriptorPool, static_cast<uint32_t>(descriptors.size()), descriptors.data());
     }
 
-    void descriptorPool::resetPool() {
-        vkResetDescriptorPool(deviceInstance.getDevice(), descriptorPoolInstance, 0);
+    void DescriptorPool::resetPool() {
+        vkResetDescriptorPool(device.getDevice(), descriptorPool, 0);
     }
 
     // *************** Descriptor Writer *********************
 
-    descriptorWriter::descriptorWriter(descriptorSetLayout& setLayout, descriptorPool& pool) : setLayout{ setLayout }, pool{ pool } {}
+    DescriptorWriter::DescriptorWriter(DescriptorSetLayout& setLayout, DescriptorPool& pool) : setLayout{ setLayout }, pool{ pool } {}
 
-    descriptorWriter& descriptorWriter::writeBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo) {
+    DescriptorWriter& DescriptorWriter::writeBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo) {
         assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
         auto& bindingDescription = setLayout.bindings[binding];
@@ -128,8 +128,7 @@ namespace engine {
         return *this;
     }
 
-    descriptorWriter& descriptorWriter::writeImage(
-        uint32_t binding, VkDescriptorImageInfo* imageInfo) {
+    DescriptorWriter& DescriptorWriter::writeImage(uint32_t binding, VkDescriptorImageInfo* imageInfo) {
         assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
         auto& bindingDescription = setLayout.bindings[binding];
@@ -147,7 +146,7 @@ namespace engine {
         return *this;
     }
 
-    bool descriptorWriter::build(VkDescriptorSet& set) {
+    bool DescriptorWriter::build(VkDescriptorSet& set) {
         bool success = pool.allocateDescriptor(setLayout.getDescriptorSetLayout(), set);
         if (!success) {
             return false;
@@ -156,10 +155,10 @@ namespace engine {
         return true;
     }
 
-    void descriptorWriter::overwrite(VkDescriptorSet& set) {
+    void DescriptorWriter::overwrite(VkDescriptorSet& set) {
         for (auto& write : writes) {
             write.dstSet = set;
         }
-        vkUpdateDescriptorSets(pool.deviceInstance.getDevice(), writes.size(), writes.data(), 0, nullptr);
+        vkUpdateDescriptorSets(pool.device.getDevice(), writes.size(), writes.data(), 0, nullptr);
     }
 }

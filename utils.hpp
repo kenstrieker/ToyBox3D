@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
 
-namespace engine {
+namespace ToyBox {
 
 	// from: https://stackoverflow.com/a/57595105
 	template <typename T, typename... Rest>

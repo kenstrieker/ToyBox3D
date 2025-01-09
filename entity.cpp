@@ -1,6 +1,6 @@
 #include "entity.hpp"
 
-namespace engine {
+namespace ToyBox {
 	glm::mat4 TransformComponent::mat4() { // 3 spatial dimensions, plus one more for homogeneous coordinates
 		const float c3 = glm::cos(rotation.z);
 		const float s3 = glm::sin(rotation.z);
@@ -31,12 +31,12 @@ namespace engine {
 		};
 	}
 
-	entity entity::makePointLight(float intensity, float radius, glm::vec3 color) {
-		entity entityInstance = entity::createEntity();
-		entityInstance.color = color;
-		entityInstance.transform.scale.x = radius;
-		entityInstance.pointLight = std::make_unique<PointLightComponent>();
-		entityInstance.pointLight->lightIntensity = intensity;
-		return entityInstance;
+	Entity Entity::makePointLight(float intensity, float radius, glm::vec3 color) {
+		Entity entity = Entity::createEntity();
+		entity.color = color;
+		entity.transform.scale.x = radius;
+		entity.pointLight = std::make_unique<PointLightComponent>();
+		entity.pointLight->lightIntensity = intensity;
+		return entity;
 	}
 }

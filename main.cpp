@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 int main() {
-	engine::application app = {};
+	ToyBox::Application app = {};
 
 	try {
 		app.run();

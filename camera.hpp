@@ -3,8 +3,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-namespace engine {
-	class camera {
+namespace ToyBox {
+	class Camera {
 	public:
 		void setOrthographicProjection(float left, float right, float top, float bottom, float near, float far); // to define each plane of the orthographic viewing volume
 		void setPerspectiveProjection(float fovy, float aspect, float near, float far); // to define the field of view of the perspective projection

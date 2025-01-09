@@ -7,15 +7,15 @@
 #include <memory>
 #include <vector>
 
-namespace engine {
-	class pointlightsystem {
+namespace ToyBox {
+	class PointLightSystem {
 	public:
-		pointlightsystem(device& deviceInstance, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout); // constructor
-		~pointlightsystem(); // destructor
+		PointLightSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout); // constructor
+		~PointLightSystem(); // destructor
 
 		// not copyable or movable
-		pointlightsystem(const pointlightsystem&) = delete;
-		pointlightsystem& operator = (const pointlightsystem&) = delete;
+		PointLightSystem(const PointLightSystem&) = delete;
+		PointLightSystem& operator = (const PointLightSystem&) = delete;
 
 		void update(FrameInfo& frameInfo, GlobalUbo& ubo); // update the point light array
 		void render(FrameInfo& frameInfo); // render the entities
@@ -24,8 +24,8 @@ namespace engine {
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout); // create a pipeline layout
 		void createPipeline(VkRenderPass renderPass); // create a pipeline
 
-		device& deviceInstance; // a handle for the device instance
-		std::unique_ptr<pipeline> pipelineInstance; // a handle for the pipeline instance
+		Device& device; // a handle for the device instance
+		std::unique_ptr<Pipeline> pipeline; // a handle for the pipeline instance
 		VkPipelineLayout pipelineLayout; // a handle for the pipeline layout
 	};
 }

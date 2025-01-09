@@ -9,30 +9,30 @@
 
 namespace std {
 	template <>
-	struct hash<engine::model::Vertex> {
-		size_t operator()(engine::model::Vertex const& vertexInstance) const {
+	struct hash<ToyBox::Model::Vertex> {
+		size_t operator()(ToyBox::Model::Vertex const& vertex) const {
 			size_t seed = 0;
-			engine::hashCombine(seed, vertexInstance.position, vertexInstance.color, vertexInstance.normal, vertexInstance.uv);
+			ToyBox::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
 			return seed;
 		}
 	};
 }
 
-namespace engine {
-	model::model(device& deviceInstance, const model::Builder& builderInstance) : deviceInstance{ deviceInstance } {
-		createVertexBuffers(builderInstance.vertices);
-		createIndexBuffer(builderInstance.indices);
+namespace ToyBox {
+	Model::Model(Device& device, const Model::Builder& builder) : device{ device } {
+		createVertexBuffers(builder.vertices);
+		createIndexBuffer(builder.indices);
 	}
 
-	model::~model() {}
+	Model::~Model() {}
 
-	std::unique_ptr<model> model::createModelFromFile(device& deviceInstance, const std::string& filepath) {
-		Builder builderInstance = {};
-		builderInstance.loadModel(filepath);
-		return std::make_unique<model>(deviceInstance, builderInstance);
+	std::unique_ptr<Model> Model::createModelFromFile(Device& device, const std::string& filepath) {
+		Builder builder = {};
+		builder.loadModel(filepath);
+		return std::make_unique<Model>(device, builder);
 	}
 
-	void model::createVertexBuffers(const std::vector<Vertex>& vertices) {
+	void Model::createVertexBuffers(const std::vector<Vertex>& vertices) {
 		// check that we have at least one triangle (3 vertices)
 		vertexCount = static_cast<uint32_t>(vertices.size());
 		assert(vertexCount >= 3 && "Vertex count must be at least 3");
@@ -40,18 +40,18 @@ namespace engine {
 		// create a staging buffer
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 		uint32_t vertexSize = sizeof(vertices[0]);
-		buffer stagingBuffer{ deviceInstance, vertexSize, vertexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+		Buffer stagingBuffer{ device, vertexSize, vertexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 		
 		// map the staging buffer memory
 		stagingBuffer.map();
 		stagingBuffer.writeToBuffer((void*)vertices.data());
 
 		// create a vertex buffer
-		vertexBuffer = std::make_unique<buffer>(deviceInstance, vertexSize, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-		deviceInstance.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
+		vertexBuffer = std::make_unique<Buffer>(device, vertexSize, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		device.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
 	}
 
-	void model::createIndexBuffer(const std::vector<uint32_t>& indices) {
+	void Model::createIndexBuffer(const std::vector<uint32_t>& indices) {
 		// check that we are using an index buffer for rendering
 		indexCount = static_cast<uint32_t>(indices.size());
 		hasIndexBuffer = indexCount > 0;
@@ -60,18 +60,18 @@ namespace engine {
 		// create a staging buffer
 		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
 		uint32_t indexSize = sizeof(indices[0]);
-		buffer stagingBuffer{ deviceInstance, indexSize, indexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+		Buffer stagingBuffer{ device, indexSize, indexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 		// map the staging buffer memory
 		stagingBuffer.map();
 		stagingBuffer.writeToBuffer((void*)indices.data());
 
 		// create a vertex buffer
-		indexBuffer = std::make_unique<buffer>(deviceInstance, indexSize, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-		deviceInstance.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), bufferSize);
+		indexBuffer = std::make_unique<Buffer>(device, indexSize, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		device.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), bufferSize);
 	}
 
-	void model::bind(VkCommandBuffer commandBuffer) {
+	void Model::bind(VkCommandBuffer commandBuffer) {
 		VkBuffer buffers[] = { vertexBuffer->getBuffer() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
@@ -81,7 +81,7 @@ namespace engine {
 		}
 	}
 
-	void model::draw(VkCommandBuffer commandBuffer) {
+	void Model::draw(VkCommandBuffer commandBuffer) {
 		if (hasIndexBuffer) {
 			vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 		}
@@ -90,7 +90,7 @@ namespace engine {
 		}
 	}
 
-	std::vector<VkVertexInputBindingDescription> model::Vertex::getBindingDescriptions() {
+	std::vector<VkVertexInputBindingDescription> Model::Vertex::getBindingDescriptions() {
 		std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
 		bindingDescriptions[0].binding = 0;
 		bindingDescriptions[0].stride = sizeof(Vertex);
@@ -98,7 +98,7 @@ namespace engine {
 		return bindingDescriptions;
 	}
 
-	std::vector<VkVertexInputAttributeDescription> model::Vertex::getAttributeDescriptions() {
+	std::vector<VkVertexInputAttributeDescription> Model::Vertex::getAttributeDescriptions() {
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions = {};
 
 		attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position) });
@@ -109,7 +109,7 @@ namespace engine {
 		return attributeDescriptions;
 	}
 
-	void model::Builder::loadModel(const std::string& filepath) {
+	void Model::Builder::loadModel(const std::string& filepath) {
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
@@ -127,16 +127,16 @@ namespace engine {
 
 		for (const auto& shape : shapes) {
 			for (const auto& index : shape.mesh.indices) {
-				Vertex vertexInstance = {};
+				Vertex vertex = {};
 
 				if (index.vertex_index >= 0) {
-					vertexInstance.position = { 
+					vertex.position = { 
 						attrib.vertices[3 * index.vertex_index + 0],
 						attrib.vertices[3 * index.vertex_index + 1],
 						attrib.vertices[3 * index.vertex_index + 2],
 					};
 
-					vertexInstance.color = {
+					vertex.color = {
 						attrib.colors[3 * index.vertex_index + 0],
 						attrib.colors[3 * index.vertex_index + 1],
 						attrib.colors[3 * index.vertex_index + 2],
@@ -144,7 +144,7 @@ namespace engine {
 				}
 
 				if (index.normal_index >= 0) {
-					vertexInstance.normal = {
+					vertex.normal = {
 						attrib.normals[3 * index.normal_index + 0],
 						attrib.normals[3 * index.normal_index + 1],
 						attrib.normals[3 * index.normal_index + 2],
@@ -152,17 +152,17 @@ namespace engine {
 				}
 
 				if (index.texcoord_index >= 0) {
-					vertexInstance.uv = {
+					vertex.uv = {
 						attrib.texcoords[2 * index.texcoord_index + 0],
 						attrib.texcoords[2 * index.texcoord_index + 1],
 					};
 				}
 
-				if (uniqueVertices.count(vertexInstance) == 0) {
-					uniqueVertices[vertexInstance] = static_cast<uint32_t>(vertices.size());
-					vertices.push_back(vertexInstance);
+				if (uniqueVertices.count(vertex) == 0) {
+					uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+					vertices.push_back(vertex);
 				}
-				indices.push_back(uniqueVertices[vertexInstance]);
+				indices.push_back(uniqueVertices[vertex]);
 			}
 		}
 	}

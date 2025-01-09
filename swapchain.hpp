@@ -5,36 +5,36 @@
 #include <string>
 #include <vector>
 
-namespace engine {
-	class swapchain {
+namespace ToyBox {
+	class SwapChain {
 	public:
 		static constexpr int MAX_FRAMES_IN_FLIGHT = 2; // avoids the CPU getting too far ahead of the GPU
-		swapchain(device& deviceRef, VkExtent2D windowExtent); // constructor
-		swapchain(device& deviceRef, VkExtent2D windowExtent, std::shared_ptr<swapchain> previous); // constructor with pointer to previous swap chain
-		~swapchain(); // destructor
+		SwapChain(Device& deviceRef, VkExtent2D windowExtent); // constructor
+		SwapChain(Device& deviceRef, VkExtent2D windowExtent, std::shared_ptr<SwapChain> previous); // constructor with pointer to previous swap chain
+		~SwapChain(); // destructor
 		
 		// not copyable or movable
-		swapchain(const swapchain&) = delete;
-		swapchain& operator = (const swapchain&) = delete;
+		SwapChain(const SwapChain&) = delete;
+		SwapChain& operator = (const SwapChain&) = delete;
 
 		// getters for class members
-		VkFramebuffer getFrameBuffer(int index) { return swapchainFramebuffers[index]; }
+		VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
 		VkRenderPass getRenderPass() { return renderPass; }
-		VkImageView getImageView(int index) { return swapchainImageViews[index]; }
-		size_t getImageCount() { return swapchainImages.size(); }
-		VkFormat getSwapchainImageFormat() { return swapchainImageFormat; }
-		VkExtent2D getSwapchainExtent() { return swapchainExtent; }
-		uint32_t getWidth() { return swapchainExtent.width; }
-		uint32_t getHeight() { return swapchainExtent.height; }
+		VkImageView getImageView(int index) { return swapChainImageViews[index]; }
+		size_t getImageCount() { return swapChainImages.size(); }
+		VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
+		VkExtent2D getSwapChainExtent() { return swapChainExtent; }
+		uint32_t getWidth() { return swapChainExtent.width; }
+		uint32_t getHeight() { return swapChainExtent.height; }
 
-		float extentAspectRatio() { return static_cast<float>(swapchainExtent.width) / static_cast<float>(swapchainExtent.height); }
+		float extentAspectRatio() { return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height); }
 
 		VkFormat findDepthFormat();
 		VkResult acquireNextImage(uint32_t* imageIndex);
 		VkResult submitCommandBuffers(const VkCommandBuffer* buffers, uint32_t* imageIndex); // submit the command buffers and synchronize
 
-		bool compareSwapFormats(const swapchain& swapchainInstance) const {
-			return swapchainInstance.swapchainDepthFormat == swapchainDepthFormat && swapchainInstance.swapchainImageFormat == swapchainImageFormat;
+		bool compareSwapFormats(const SwapChain& swapChain) const {
+			return swapChain.swapChainDepthFormat == swapChainDepthFormat && swapChain.swapChainImageFormat == swapChainImageFormat;
 		}
 
 	private:
@@ -50,24 +50,24 @@ namespace engine {
 		VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes); // find the presentation mode settings for the swap chain
 		VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities); // find the extent (~resolution) settings for the swap chain
 
-		VkFormat swapchainImageFormat;
-		VkFormat swapchainDepthFormat;
-		VkExtent2D swapchainExtent;
+		VkFormat swapChainImageFormat;
+		VkFormat swapChainDepthFormat;
+		VkExtent2D swapChainExtent;
 
-		std::vector<VkFramebuffer> swapchainFramebuffers; // a handle to hold the framebuffers
+		std::vector<VkFramebuffer> swapChainFramebuffers; // a handle to hold the framebuffers
 		VkRenderPass renderPass; // a handle for the render pass
 
 		std::vector<VkImage> depthImages;
 		std::vector<VkDeviceMemory> depthImageMemorys;
 		std::vector<VkImageView> depthImageViews;
-		std::vector<VkImage> swapchainImages; // a handle for the images
-		std::vector<VkImageView> swapchainImageViews; // a handle for image views, describing how to access the image
+		std::vector<VkImage> swapChainImages; // a handle for the images
+		std::vector<VkImageView> swapChainImageViews; // a handle for image views, describing how to access the image
 
-		device& deviceInstance;
+		Device& device;
 		VkExtent2D windowExtent;
 
-		VkSwapchainKHR swapchainInstance;
-		std::shared_ptr<swapchain> oldSwapchainInstance;
+		VkSwapchainKHR swapChain;
+		std::shared_ptr<SwapChain> oldSwapChain;
 
 		std::vector<VkSemaphore> imageAvailableSemaphores; // signals that an image has been acquired from the swapchain and is ready for rendering
 		std::vector<VkSemaphore> renderFinishedSemaphores; // signals that rendering has finished and presentation can happen

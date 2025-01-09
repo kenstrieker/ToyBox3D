@@ -1,20 +1,20 @@
 #pragma once
 #include "device.hpp"
 
-namespace engine {
-    class buffer {
+namespace ToyBox {
+    class Buffer {
     public:
-        buffer(
-            device& deviceInstance,
+        Buffer(
+            Device& device,
             VkDeviceSize instanceSize,
             uint32_t instanceCount,
             VkBufferUsageFlags usageFlags,
             VkMemoryPropertyFlags memoryPropertyFlags,
             VkDeviceSize minOffsetAlignment = 1);
-        ~buffer();
+        ~Buffer();
 
-        buffer(const buffer&) = delete;
-        buffer& operator=(const buffer&) = delete;
+        Buffer(const Buffer&) = delete;
+        Buffer& operator=(const Buffer&) = delete;
 
         VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
         void unmap();
@@ -29,7 +29,7 @@ namespace engine {
         VkDescriptorBufferInfo descriptorInfoForIndex(int index);
         VkResult invalidateIndex(int index);
 
-        VkBuffer getBuffer() const { return bufferInstance; }
+        VkBuffer getBuffer() const { return buffer; }
         void* getMappedMemory() const { return mapped; }
         uint32_t getInstanceCount() const { return instanceCount; }
         VkDeviceSize getInstanceSize() const { return instanceSize; }
@@ -41,9 +41,9 @@ namespace engine {
     private:
         static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
-        device& deviceInstance;
+        Device& device;
         void* mapped = nullptr;
-        VkBuffer bufferInstance = VK_NULL_HANDLE;
+        VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
 
         VkDeviceSize bufferSize;

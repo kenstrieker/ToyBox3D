@@ -2,8 +2,8 @@
 #include "entity.hpp"
 #include "window.hpp"
 
-namespace engine {
-	class input {
+namespace ToyBox {
+	class Input {
 	public:
         struct KeyMappings {
             int moveLeft = GLFW_KEY_A;
@@ -18,7 +18,7 @@ namespace engine {
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow* windowInstance, float dt, entity& entityInstance);
+        void moveInPlaneXZ(GLFWwindow* window, float dt, Entity& entity);
 
         KeyMappings keys = {};
         float moveSpeed{ 3.f };

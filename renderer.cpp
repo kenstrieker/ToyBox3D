@@ -2,73 +2,73 @@
 #include <stdexcept>
 #include <array>
 
-namespace engine {
-	renderer::renderer(window& windowInstance, device& deviceInstance) : windowInstance{ windowInstance }, deviceInstance{ deviceInstance } {
-		recreateSwapchain();
+namespace ToyBox {
+	Renderer::Renderer(Window& window, Device& device) : window{ window }, device{ device } {
+		recreateSwapChain();
 		createCommandBuffers();
 	}
 
-	renderer::~renderer() {
+	Renderer::~Renderer() {
 		freeCommandBuffers();
 	}
 
-	void renderer::recreateSwapchain() {
+	void Renderer::recreateSwapChain() {
 		// get the current window size
-		auto extent = windowInstance.getExtent();
+		auto extent = window.getExtent();
 
 		// update extent while size is valid, will pause and wait during minimization
 		while (extent.width == 0 || extent.height == 0) {
-			extent = windowInstance.getExtent();
+			extent = window.getExtent();
 			glfwWaitEvents();
 		}
 
 		// wait until the current swap chain is no longer being used before we create another
-		vkDeviceWaitIdle(deviceInstance.getDevice());
-		// swapchainInstance = nullptr; // temporary fix; two swap chains can't coexist on the same window, so destroy the old one first
+		vkDeviceWaitIdle(device.getDevice());
+		// swapChain = nullptr; // temporary fix; two swap chains can't coexist on the same window, so destroy the old one first
 
-		if (swapchainInstance == nullptr) {
-			swapchainInstance = std::make_unique<swapchain>(deviceInstance, extent);
+		if (swapChain == nullptr) {
+			swapChain = std::make_unique<SwapChain>(device, extent);
 		}
 		else {
-			std::shared_ptr<swapchain> oldSwapchainInstance = std::move(swapchainInstance);
-			swapchainInstance = std::make_unique<swapchain>(deviceInstance, extent, oldSwapchainInstance);
+			std::shared_ptr<SwapChain> oldSwapChain = std::move(swapChain);
+			swapChain = std::make_unique<SwapChain>(device, extent, oldSwapChain);
 
-			if (!oldSwapchainInstance->compareSwapFormats(*swapchainInstance.get())) {
+			if (!oldSwapChain->compareSwapFormats(*swapChain.get())) {
 				throw std::runtime_error("swap chain image or depth format has changed!");
 			}
 		}
 	}
 
-	void renderer::createCommandBuffers() {
+	void Renderer::createCommandBuffers() {
 		// // resize the container holding the command buffers
-		commandBuffers.resize(swapchain::MAX_FRAMES_IN_FLIGHT);
+		commandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		// allocate the command buffers by specifying the command pool and number of buffers to allocate
 		VkCommandBufferAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = deviceInstance.getCommandPool();
+		allocInfo.commandPool = device.getCommandPool();
 		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
 		// create the command buffers
-		if (vkAllocateCommandBuffers(deviceInstance.getDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+		if (vkAllocateCommandBuffers(device.getDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate command buffers!");
 		}
 	}
 
-	void renderer::freeCommandBuffers() {
-		vkFreeCommandBuffers(deviceInstance.getDevice(), deviceInstance.getCommandPool(), static_cast<float>(commandBuffers.size()), commandBuffers.data());
+	void Renderer::freeCommandBuffers() {
+		vkFreeCommandBuffers(device.getDevice(), device.getCommandPool(), static_cast<float>(commandBuffers.size()), commandBuffers.data());
 		commandBuffers.clear();
 	}
 
-	VkCommandBuffer renderer::beginFrame() {
+	VkCommandBuffer Renderer::beginFrame() {
 		assert(!isFrameStarted && "Can't call beginFrame while already in progress");
 
 		// acquire an image from the swap chain
-		auto result = swapchainInstance->acquireNextImage(&currentImageIndex);
+		auto result = swapChain->acquireNextImage(&currentImageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			recreateSwapchain();
+			recreateSwapChain();
 			return nullptr; // the frame has not successfully started
 		}
 
@@ -90,7 +90,7 @@ namespace engine {
 	}
 
 
-	VkCommandBuffer renderer::endFrame() {
+	VkCommandBuffer Renderer::endFrame() {
 		assert(isFrameStarted && "Can't call endFrame while frame is not in progress");
 
 		// record and  submit the command buffer
@@ -98,32 +98,32 @@ namespace engine {
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to record command buffer!");
 		}
-		auto result = swapchainInstance->submitCommandBuffers(&commandBuffer, &currentImageIndex);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowInstance.wasWindowResized()) {
-			windowInstance.resetWindowResizedFlag();
-			recreateSwapchain();
+		auto result = swapChain->submitCommandBuffers(&commandBuffer, &currentImageIndex);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.wasWindowResized()) {
+			window.resetWindowResizedFlag();
+			recreateSwapChain();
 		}
 		else if (result != VK_SUCCESS) {
 			throw std::runtime_error("failed to present swap chain image!");
 		}
 
 		isFrameStarted = false;
-		currentFrameIndex = (currentFrameIndex + 1) % swapchain::MAX_FRAMES_IN_FLIGHT;
+		currentFrameIndex = (currentFrameIndex + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void renderer::beginSwapchainRenderPass(VkCommandBuffer commandBuffer) {
+	void Renderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
 		assert(isFrameStarted && "Can't call beginSwapchainRenderPass if frame is not in progress");
 		assert(commandBuffer == getCurrentCommandBuffer() && "Can't begin render pass on command buffer from a different frame");
 
 		// start defining a render pass, creating a framebuffer for each swap chain image where it is specified as a color attachment
 		VkRenderPassBeginInfo renderPassInfo = {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = swapchainInstance->getRenderPass();
-		renderPassInfo.framebuffer = swapchainInstance->getFrameBuffer(currentImageIndex);
+		renderPassInfo.renderPass = swapChain->getRenderPass();
+		renderPassInfo.framebuffer = swapChain->getFrameBuffer(currentImageIndex);
 
 		// define the size of the render area
 		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = swapchainInstance->getSwapchainExtent();
+		renderPassInfo.renderArea.extent = swapChain->getSwapChainExtent();
 
 		// define clear values to use for the color attachment
 		std::array<VkClearValue, 2> clearValues = {};
@@ -139,16 +139,16 @@ namespace engine {
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(swapchainInstance->getSwapchainExtent().width);
-		viewport.height = static_cast<float>(swapchainInstance->getSwapchainExtent().height);
+		viewport.width = static_cast<float>(swapChain->getSwapChainExtent().width);
+		viewport.height = static_cast<float>(swapChain->getSwapChainExtent().height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		VkRect2D scissor{ {0, 0}, swapchainInstance->getSwapchainExtent() };
+		VkRect2D scissor{ {0, 0}, swapChain->getSwapChainExtent() };
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 	}
 
-	void renderer::endSwapchainRenderPass(VkCommandBuffer commandBuffer) {
+	void Renderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
 		assert(isFrameStarted && "Can't call endSwapchainRenderPass if frame is not in progress");
 		assert(commandBuffer == getCurrentCommandBuffer() && "Can't end render pass on command buffer from a different frame");
 

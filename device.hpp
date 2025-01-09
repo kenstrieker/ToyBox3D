@@ -4,7 +4,7 @@
 #include <vector>
 #include <optional>
 
-namespace engine {
+namespace ToyBox {
 	// struct for checking surface capabilities, surface formats, and available presentation modes for the swap chain
 	struct SwapChainSupportDetails {
 		VkSurfaceCapabilitiesKHR capabilities;
@@ -21,21 +21,21 @@ namespace engine {
 		bool isComplete() { return graphicsFamilyHasValue && presentFamilyHasValue; }
 	};
 
-	class device {
+	class Device {
 	public:
 #ifdef NDEBUG // not to be compiled in debug mode
 		const bool enableValidationLayers = false;
 #else
 		const bool enableValidationLayers = true;
 #endif
-		device(window& windowInstance); // constructor
-		~device(); // destructor
+		Device(Window& window); // constructor
+		~Device(); // destructor
 
 		// not copyable or movable
-		device(const device&) = delete;
-		device& operator = (const device&) = delete;
-		device(device&&) = delete;
-		device& operator = (device&&) = delete;
+		Device(const Device&) = delete;
+		Device& operator = (const Device&) = delete;
+		Device(Device&&) = delete;
+		Device& operator = (Device&&) = delete;
 
 		// getters for class members
 		VkCommandPool getCommandPool() { return commandPool; }
@@ -44,7 +44,7 @@ namespace engine {
 		VkQueue getGraphicsQueue() { return graphicsQueue_; }
 		VkQueue getPresentQueue() { return presentQueue_; }
 
-		SwapChainSupportDetails getSwapchainSupport() { return querySwapchainSupport(physicalDevice); } // get swap chain support details for the physical device
+		SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); } // get swap chain support details for the physical device
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties); // find the right type of memory to use based on the vertex buffer and our own app requirements
 		QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); } // look for all the queue families we need
 		VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -65,19 +65,19 @@ namespace engine {
 		void createLogicalDevice(); // to describe what features to use so that the graphics card can be interfaced with
 		void createCommandPool(); // for managing the memory that is used to store command buffers
 
-		bool isDeviceSuitable(VkPhysicalDevice deviceInstance); // evaluate the suitability of a device by querying for some details
+		bool isDeviceSuitable(VkPhysicalDevice device); // evaluate the suitability of a device by querying for some details
 		std::vector<const char*> getRequiredExtensions(); // get necessary extensions from GLFW to interface with window based on whether validation layers are enabled
 		bool checkValidationLayerSupport(); // check if all of the validation requested layers are available
-		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice deviceInstance); // check which queue families are supported by the device, and which device supports the necessary commands
+		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device); // check which queue families are supported by the device, and which device supports the necessary commands
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo); // fills in a structure with debug messenger and callback details
 		void hasGlfwRequiredInstanceExtensions(); // check if required GLFW extensions are present
-		bool checkDeviceExtensionSupport(VkPhysicalDevice deviceInstance); // called from isDeviceSuitable as an additonal check
-		SwapChainSupportDetails querySwapchainSupport(VkPhysicalDevice deviceInstance); // to populate the SwapChainSupportDetails struct
+		bool checkDeviceExtensionSupport(VkPhysicalDevice device); // called from isDeviceSuitable as an additonal check
+		SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device); // to populate the SwapChainSupportDetails struct
 
-		VkInstance vulkanInstance; // data member to handle Vulkan instance
+		VkInstance vulkan; // data member to handle Vulkan instance
 		VkDebugUtilsMessengerEXT debugMessenger; // a handle to tell Vulkan about the callback function, needs to be created and destroyed
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; // a handle to store the graphics card that will be implicitly destroyed when VkInstance is destroyed
-		window& windowInstance; // a handle to store the window instance
+		Window& window; // a handle to store the window instance
 		VkCommandPool commandPool; // a handle to store the command pool to manage buffer/command buffer memory
 		
 		VkDevice device_;

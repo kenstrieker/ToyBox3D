@@ -4,19 +4,18 @@
 #include <iostream>
 #include <cassert>
 
-namespace engine {
-
-	pipeline::pipeline(device& deviceInstance, const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo) : deviceInstance{ deviceInstance } {
+namespace ToyBox {
+	Pipeline::Pipeline(Device& device, const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo) : device{ device } {
 		createGraphicsPipeline(vertFilepath, fragFilepath, configInfo);
 	}
 
-	pipeline::~pipeline() {
-		vkDestroyShaderModule(deviceInstance.getDevice(), vertShaderModule, nullptr);
-		vkDestroyShaderModule(deviceInstance.getDevice(), fragShaderModule, nullptr);
-		vkDestroyPipeline(deviceInstance.getDevice(), graphicsPipeline, nullptr);
+	Pipeline::~Pipeline() {
+		vkDestroyShaderModule(device.getDevice(), vertShaderModule, nullptr);
+		vkDestroyShaderModule(device.getDevice(), fragShaderModule, nullptr);
+		vkDestroyPipeline(device.getDevice(), graphicsPipeline, nullptr);
 	}
 
-	std::vector<char> pipeline::readFile(const std::string& filepath) {
+	std::vector<char> Pipeline::readFile(const std::string& filepath) {
 		std::ifstream file{ filepath, std::ios::ate | std::ios::binary };
 
 		if (!file.is_open()) {
@@ -33,7 +32,7 @@ namespace engine {
 		return buffer;
 	}
 
-	void pipeline::createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo) {
+	void Pipeline::createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo) {
 		assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
 		assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no renderPass provided in configInfo");
 
@@ -94,28 +93,28 @@ namespace engine {
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
 		// create the graphics pipeline
-		if (vkCreateGraphicsPipelines(deviceInstance.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+		if (vkCreateGraphicsPipelines(device.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphics pipeline!");
 		}
 	}
 
-	void pipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) {
+	void Pipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) {
 		VkShaderModuleCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		createInfo.codeSize = code.size();
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 		// create the shader module
-		if (vkCreateShaderModule(deviceInstance.getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
+		if (vkCreateShaderModule(device.getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create shader module!");
 		}
 	}
 
-	void pipeline::bind(VkCommandBuffer commandBuffer) {
+	void Pipeline::bind(VkCommandBuffer commandBuffer) {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 	}
 
-	void pipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
+	void Pipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
 		// take a list of vertices and group them into triangle geometry
 		configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -190,7 +189,7 @@ namespace engine {
 		configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
 		configInfo.dynamicStateInfo.flags = 0;
 
-		configInfo.bindingDescriptions = model::Vertex::getBindingDescriptions();
-		configInfo.attributeDescriptions = model::Vertex::getAttributeDescriptions();
+		configInfo.bindingDescriptions = Model::Vertex::getBindingDescriptions();
+		configInfo.attributeDescriptions = Model::Vertex::getAttributeDescriptions();
 	}
 }

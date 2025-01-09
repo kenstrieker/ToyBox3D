@@ -7,28 +7,28 @@
 #include <memory>
 #include <vector>
 
-namespace engine {
-	class application {
+namespace ToyBox {
+	class Application {
 	public:
-		static constexpr int WIDTH = 800; // window width
-		static constexpr int HEIGHT = 600; // window height
+		static constexpr int WIDTH = 1920; // window width
+		static constexpr int HEIGHT = 1080; // window height
 
-		application(); // constructor
-		~application(); // destructor
+		Application(); // constructor
+		~Application(); // destructor
 
 		// not copyable or movable
-		application(const application&) = delete;
-		application& operator = (const application&) = delete;
+		Application(const Application&) = delete;
+		Application& operator = (const Application&) = delete;
 
 		void run(); // main event loop function
 
 	private:
 		void loadEntities(); // load the entities
 
-		window windowInstance{ WIDTH, HEIGHT, "VulkanGame" }; // a handle for the window instance
-		device deviceInstance{ windowInstance }; // a handle for the device instance
-		entity::Map gameEntities; // a handle for the entity objects
-		std::unique_ptr<descriptorPool> globalPool = {}; // a handle for the descriptor pool
-		renderer rendererInstance{ windowInstance, deviceInstance }; // a handle for the renderer
+		Window window{ WIDTH, HEIGHT, "VulkanGame" }; // a handle for the window instance
+		Device device{ window }; // a handle for the device instance
+		Entity::Map gameEntities; // a handle for the entity objects
+		std::unique_ptr<DescriptorPool> globalPool = {}; // a handle for the descriptor pool
+		Renderer renderer{ window, device }; // a handle for the renderer
 	};
 }

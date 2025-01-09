@@ -3,7 +3,7 @@
 #include "entity.hpp"
 #include <vulkan/vulkan.h>
 
-namespace engine {
+namespace ToyBox {
 #define MAX_LIGHTS 10
 	struct PointLight {
 		glm::vec4 position = {};
@@ -25,8 +25,8 @@ namespace engine {
 		int frameIndex;
 		float frameTime;
 		VkCommandBuffer commandBuffer;
-		camera& cameraInstance;
+		Camera& camera;
 		VkDescriptorSet globalDescriptorSet;
-		entity::Map& gameEntities;
+		Entity::Map& gameEntities;
 	};
 }

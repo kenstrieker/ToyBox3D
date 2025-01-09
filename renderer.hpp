@@ -6,18 +6,18 @@
 #include <memory>
 #include <vector>
 
-namespace engine {
-	class renderer {
+namespace ToyBox {
+	class Renderer {
 	public:
-		renderer(window& windowInstance, device& deviceInstance); // constructor
-		~renderer(); // destructor
+		Renderer(Window& window, Device& device); // constructor
+		~Renderer(); // destructor
 
 		// not copyable or movable
-		renderer(const renderer&) = delete;
-		renderer& operator = (const renderer&) = delete;
+		Renderer(const Renderer&) = delete;
+		Renderer& operator = (const Renderer&) = delete;
 
-		VkRenderPass getSwapchainRenderPass() const { return swapchainInstance->getRenderPass(); }
-		float getAspectRatio() const { return swapchainInstance->extentAspectRatio(); }
+		VkRenderPass getSwapChainRenderPass() const { return swapChain->getRenderPass(); }
+		float getAspectRatio() const { return swapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; }
 
 		VkCommandBuffer getCurrentCommandBuffer() const {
@@ -32,17 +32,17 @@ namespace engine {
 
 		VkCommandBuffer beginFrame(); // start a frame
 		VkCommandBuffer endFrame(); // end a frame
-		void beginSwapchainRenderPass(VkCommandBuffer commandBuffer);
-		void endSwapchainRenderPass(VkCommandBuffer commandBuffer);
+		void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
+		void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
 	private:
 		void createCommandBuffers(); // allocate command buffers from the command pool
 		void freeCommandBuffers(); // deallocate command buffers
-		void recreateSwapchain(); // recreate the swap chain (for example, when resizing the window)
+		void recreateSwapChain(); // recreate the swap chain (for example, when resizing the window)
 
-		window& windowInstance;; // a handle for the window instance
-		device& deviceInstance; // a handle for the device instance
-		std::unique_ptr<swapchain> swapchainInstance; // a handle for the swap chain instance
+		Window& window; // a handle for the window instance
+		Device& device; // a handle for the device instance
+		std::unique_ptr<SwapChain> swapChain; // a handle for the swap chain instance
 		std::vector<VkCommandBuffer> commandBuffers; // a handle for the command buffers
 		uint32_t currentImageIndex; // a handle for the index of the current image
 		int currentFrameIndex; // keep track of the frame index not tied to the image index
